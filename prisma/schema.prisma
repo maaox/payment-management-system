@@ -1,0 +1,50 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["driverAdapters"]
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  COLLABORATOR
+  CLIENT
+}
+
+model User {
+  id           String    @id @default(uuid())
+  dni          String
+  name         String
+  username     String    @unique
+  passwordHash String
+  role         Role      @default(CLIENT)
+  payments     Payment[] // solo aplica para CLIENT
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  @@map("users")
+}
+
+model Payment {
+  id        String   @id @default(uuid())
+  client    User     @relation(fields: [clientId], references: [id])
+  clientId  String
+  category  String
+  item      String
+  amount    Decimal  @default(0.0)
+  image     Bytes? // almacenamos la imagen como BLOB
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([clientId, category, item])
+  @@map("payments")
+}

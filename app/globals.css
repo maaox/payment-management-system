@@ -1,0 +1,122 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --foreground-rgb: 31, 41, 55;
+  --background-rgb: 248, 250, 252;
+  
+  --background: 210 40% 98%;
+  --foreground: 217 33% 17%;
+  --card: 0 0% 100%;
+  --card-foreground: 217 33% 17%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 217 33% 17%;
+  --primary: 350 83% 60%;
+  --primary-foreground: 0 0% 98%;
+  --secondary: 350 100% 88%;
+  --secondary-foreground: 0 0% 98%;
+  --accent: 341 100% 77%;
+  --accent-foreground: 0 0% 98%;
+  --muted: 210 40% 96%;
+  --muted-foreground: 215 16% 47%;
+  --destructive: 0 84% 60%;
+  --destructive-foreground: 0 0% 98%;
+  --border: 214 32% 91%;
+  --input: 214 32% 91%;
+  --ring: 350 83% 60%;
+  --radius: 0.5rem;
+}
+
+.dark {
+  --background: 217 33% 17%;
+  --foreground: 210 40% 98%;
+  --card: 217 33% 17%;
+  --card-foreground: 210 40% 98%;
+  --popover: 217 33% 17%;
+  --popover-foreground: 210 40% 98%;
+  --primary: 350 83% 60%;
+  --primary-foreground: 0 0% 98%;
+  --secondary: 350 100% 88%;
+  --secondary-foreground: 0 0% 98%;
+  --accent: 341 100% 77%;
+  --accent-foreground: 0 0% 98%;
+  --muted: 217 33% 10%;
+  --muted-foreground: 215 16% 65%;
+  --destructive: 0 62% 30%;
+  --destructive-foreground: 0 0% 98%;
+  --border: 217 33% 25%;
+  --input: 217 33% 25%;
+  --ring: 350 83% 60%;
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+  
+  input:focus, textarea:focus, select:focus {
+    @apply outline-2 outline-offset-1 outline-primary;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply bg-primary text-primary-foreground rounded-2xl shadow hover:shadow-lg hover:-translate-y-0.5 transition duration-200;
+  }
+  
+  .btn-secondary {
+    @apply bg-secondary text-secondary-foreground rounded-2xl shadow hover:shadow-lg hover:-translate-y-0.5 transition duration-200;
+  }
+  
+  .btn-accent {
+    @apply bg-accent text-accent-foreground rounded-2xl shadow hover:shadow-lg hover:-translate-y-0.5 transition duration-200;
+  }
+  
+  .nav-link {
+    @apply flex items-center gap-2 p-4 hover:bg-primary/10 rounded-lg transition-colors;
+  }
+  
+  .nav-link.active {
+    @apply bg-primary/10 text-primary;
+  }
+  
+  .table-container {
+    @apply rounded-lg overflow-hidden border border-border;
+  }
+  
+  .table-header {
+    @apply bg-primary text-primary-foreground sticky top-0;
+  }
+  
+  .table-row-even {
+    @apply bg-white;
+  }
+  
+  .table-row-odd {
+    @apply bg-[#EDF2F7];
+  }
+  
+  .table-row {
+    @apply hover:bg-gray-100 transition-colors;
+  }
+  
+  .form-input {
+    @apply rounded-lg focus:outline-2 focus:outline-offset-1 focus:outline-primary;
+  }
+
+  .payment-input {
+    @apply pl-8 form-input;
+  }
+
+  .payment-input-wrapper {
+    @apply relative;
+  }
+
+  .payment-input-prefix {
+    @apply absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none;
+  }
+}
