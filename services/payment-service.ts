@@ -1,4 +1,4 @@
-import { prisma } from "../lib/prisma";
+// import { prisma } from "../lib/prisma";
 
 export interface CreatePaymentDTO {
   clientId: string;
@@ -17,12 +17,12 @@ export interface UpdatePaymentDTO {
 
 export async function getPayments(clientId: string | null) {
   // 1) Filtrar por clientId
-  const where = clientId ? { clientId } : {};
-  return prisma.payment.findMany({ where, orderBy: { createdAt: "desc" } });
+  /* const where = clientId ? { clientId } : {};
+  return prisma.payment.findMany({ where, orderBy: { createdAt: "desc" } }); */
 }
 
 export async function createPayment(data: CreatePaymentDTO) {
-  // 1) Verificar que no exista ya esa combinación
+  /* // 1) Verificar que no exista ya esa combinación
   const exists = await prisma.payment.findFirst({
     where: {
       clientId: data.clientId,
@@ -43,11 +43,11 @@ export async function createPayment(data: CreatePaymentDTO) {
         ? new Uint8Array(Buffer.from(data.imageBase64, "base64"))
         : undefined,
     },
-  });
+  }); */
 }
 
 export async function updatePayment(id: string, data: UpdatePaymentDTO) {
-  // 1) Verificar existencia
+  /* // 1) Verificar existencia
   const payment = await prisma.payment.findUnique({ where: { id } });
   if (!payment) throw new Error("Pago no encontrado");
 
@@ -67,13 +67,13 @@ export async function updatePayment(id: string, data: UpdatePaymentDTO) {
   return prisma.payment.update({
     where: { id },
     data: updateData,
-  });
+  }); */
 }
 
 export async function deletePayment(id: string) {
-  // 1) Verificar
+  /* // 1) Verificar
   const payment = await prisma.payment.findUnique({ where: { id } });
   if (!payment) throw new Error("Pago no encontrado");
   // 2) Eliminar
-  return prisma.payment.delete({ where: { id } });
+  return prisma.payment.delete({ where: { id } }); */
 }

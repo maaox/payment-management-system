@@ -1,6 +1,12 @@
-// services/userService.ts
-import { Role } from "@prisma/client";
-import { prisma } from "@/lib/prisma";
+// import { Role } from "@prisma/client";
+// import { prisma } from "@/lib/prisma";
+
+// Eliminar, esto debe importarse de prisma
+export enum Role {
+  ADMIN = "ADMIN",
+  COLLABORATOR = "COLLABORATOR",
+  CLIENT = "CLIENT",
+}
 
 export interface CreateUserDTO {
   dni: string;
@@ -24,15 +30,15 @@ export interface UpdateUserDTO {
 }
 
 export async function getUsers(role: Role = Role.CLIENT) {
-  // 1) Filtrar por rol
+  /* // 1) Filtrar por rol
   return prisma.user.findMany({
     where: { role },
     include: role === Role.CLIENT ? { payments: true } : undefined,
-  });
+  }); */
 }
 
 export async function createUser(data: CreateUserDTO) {
-  // 1) Validar username único
+  /* // 1) Validar username único
   const existingUser = await prisma.user.findUnique({
     where: { username: data.username },
   });
@@ -70,11 +76,11 @@ export async function createUser(data: CreateUserDTO) {
             }
           : undefined,
     },
-  });
+  }); */
 }
 
 export async function updateUser(id: string, data: UpdateUserDTO) {
-  // 1) Verificar existencia
+  /* // 1) Verificar existencia
   const user = await prisma.user.findUnique({ where: { id } });
   if (!user) throw new Error("Usuario no encontrado");
 
@@ -103,11 +109,11 @@ export async function updateUser(id: string, data: UpdateUserDTO) {
       username: data.username,
       passwordHash: data.passwordHash,
     },
-  });
+  }); */
 }
 
 export async function deleteUser(id: string) {
-  // 1) Buscar usuario
+ /*  // 1) Buscar usuario
   const user = await prisma.user.findUnique({ where: { id } });
   if (!user) throw new Error("Usuario no encontrado");
 
@@ -117,5 +123,5 @@ export async function deleteUser(id: string) {
   }
 
   // 3) Eliminar usuario
-  return prisma.user.delete({ where: { id } });
+  return prisma.user.delete({ where: { id } }); */
 }

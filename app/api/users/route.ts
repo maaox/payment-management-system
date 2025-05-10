@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createUser, getUsers } from "@/services/user-service";
-import { Role } from "@prisma/client";
+import { createUser, getUsers, Role } from "@/services/user-service";
+// import { Role } from "@prisma/client";
+
+// Eliminar, esto debe importarse de prisma
+
 
 export async function GET(req: NextRequest) {
   const role = req.nextUrl.searchParams.get("role");
