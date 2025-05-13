@@ -1,44 +1,50 @@
-// import { Role } from "@prisma/client";
-// import { prisma } from "@/lib/prisma";
-
-// Eliminar, esto debe importarse de prisma
-export enum Role {
-  ADMIN = "ADMIN",
-  COLLABORATOR = "COLLABORATOR",
-  CLIENT = "CLIENT",
-}
+import { Role } from "@prisma/client";
+import { prisma } from "@/lib/prisma";
+import * as bcrypt from "bcrypt";
+import { hashPassword } from "./auth-service";
 
 export interface CreateUserDTO {
-  dni: string;
+  code: string;
   name: string;
   username: string;
-  passwordHash: string;
+  password: string;
   role: Role;
+  totalInvestment?: number;
+  totalPaid?: number;
   payments?: {
     category: string;
-    item: string;
+    concept: string;
     amount: number;
     imageBase64?: string;
   }[];
 }
 
 export interface UpdateUserDTO {
-  dni?: string;
+  code?: string;
   name?: string;
   username?: string;
-  passwordHash?: string;
+  password?: string;
+  totalInvestment?: number;
+}
+
+export async function getUser(id: string) {
+  const user = await prisma.user.findUnique({
+    where: { id },
+    include: { payments: true }, // Incluir pagos para clientes
+  });
+  if (!user) throw new Error("Usuario no encontrado");
+  return user;
 }
 
 export async function getUsers(role: Role = Role.CLIENT) {
-  /* // 1) Filtrar por rol
+  // 1) Filtrar por rol
   return prisma.user.findMany({
     where: { role },
-    include: role === Role.CLIENT ? { payments: true } : undefined,
-  }); */
+  });
 }
 
 export async function createUser(data: CreateUserDTO) {
-  /* // 1) Validar username único
+  // 1) Validar username único
   const existingUser = await prisma.user.findUnique({
     where: { username: data.username },
   });
@@ -46,41 +52,44 @@ export async function createUser(data: CreateUserDTO) {
     throw new Error("El username ya está en uso");
   }
 
-  // 2) Validar DNI único dentro de su rol
-  const conflictDni = await prisma.user.findFirst({
-    where: { dni: data.dni, role: data.role },
+  // 2) Validar código único dentro de su rol
+  const conflictCode = await prisma.user.findFirst({
+    where: { code: data.code, role: data.role },
   });
-  if (conflictDni) {
-    throw new Error(`Ya existe un ${data.role} con ese DNI`);
+  if (conflictCode) {
+    throw new Error(`Ya existe un ${data.role} con ese código`);
   }
 
-  // 3) Crear usuario + pagos anidados si es CLIENT
+  // 3) Hashear la contraseña
+  const passwordHash = await hashPassword(data.password);
+
+  // 4) Crear usuario + pagos anidados si es CLIENT
   return prisma.user.create({
     data: {
-      dni: data.dni,
+      code: data.code,
       name: data.name,
       username: data.username,
-      passwordHash: data.passwordHash,
+      passwordHash: passwordHash, // Usar el hash generado
       role: data.role,
-      payments:
-        data.role === Role.CLIENT && data.payments
-          ? {
-              create: data.payments.map((p) => ({
-                category: p.category,
-                item: p.item,
-                amount: p.amount.toString(),
-                image: p.imageBase64
-                  ? new Uint8Array(Buffer.from(p.imageBase64, "base64"))
-                  : undefined,
-              })),
-            }
-          : undefined,
+      totalInvestment: data?.totalInvestment?.toString(),
+      totalPaid: data?.totalPaid?.toString(),
+      payments: {
+        create: data?.payments?.map((p) => ({
+          category: p.category,
+          concept: p.concept,
+          amount: p.amount.toString(),
+          image: p.imageBase64
+            ? new Uint8Array(Buffer.from(p.imageBase64, "base64"))
+            : undefined,
+        })),
+      },
     },
-  }); */
+    include: { payments: data.role === Role.CLIENT }, // Incluir pagos en la respuesta si es cliente
+  });
 }
 
 export async function updateUser(id: string, data: UpdateUserDTO) {
-  /* // 1) Verificar existencia
+  // 1) Verificar existencia
   const user = await prisma.user.findUnique({ where: { id } });
   if (!user) throw new Error("Usuario no encontrado");
 
@@ -92,28 +101,36 @@ export async function updateUser(id: string, data: UpdateUserDTO) {
     if (dupe) throw new Error("El username ya está en uso");
   }
 
-  // 3) Validar DNI dentro de rol (si cambia)
-  if (data.dni && data.dni !== user.dni) {
+  // 3) Validar código dentro de rol (si cambia)
+  if (data.code && data.code !== user.code) {
     const conflict = await prisma.user.findFirst({
-      where: { dni: data.dni, role: user.role },
+      where: { code: data.code, role: user.role },
     });
-    if (conflict) throw new Error(`Ya existe un ${user.role} con ese DNI`);
+    if (conflict) throw new Error(`Ya existe un ${user.role} con ese código`);
   }
 
-  // 4) Actualizar
+  // 4) Hashear la contraseña si se proporciona una nueva
+  let passwordHashToUpdate;
+  if (data.password) {
+    passwordHashToUpdate = await hashPassword(data.password);
+  }
+
+  // 5) Actualizar
   return prisma.user.update({
     where: { id },
     data: {
-      dni: data.dni,
+      code: data.code,
       name: data.name,
       username: data.username,
-      passwordHash: data.passwordHash,
+      passwordHash: passwordHashToUpdate, // Solo actualizar si hay nueva contraseña
+      totalInvestment: data?.totalInvestment?.toString()
     },
-  }); */
+    include: { payments: user.role === Role.CLIENT }, // Incluir pagos en la respuesta si es cliente
+  });
 }
 
 export async function deleteUser(id: string) {
- /*  // 1) Buscar usuario
+  // 1) Buscar usuario
   const user = await prisma.user.findUnique({ where: { id } });
   if (!user) throw new Error("Usuario no encontrado");
 
@@ -123,5 +140,5 @@ export async function deleteUser(id: string) {
   }
 
   // 3) Eliminar usuario
-  return prisma.user.delete({ where: { id } }); */
+  return prisma.user.delete({ where: { id } });
 }

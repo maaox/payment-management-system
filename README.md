@@ -47,7 +47,7 @@ Un sistema moderno para la gestión de pagos, clientes y colaboradores, desarrol
 
 ### Gestión de Clientes
 
-- Registra nuevos clientes con información básica (DNI, nombre, usuario, contraseña)
+- Registra nuevos clientes con información básica (Código, nombre, usuario, contraseña)
 - Visualiza y edita la información de clientes existentes
 - Accede al historial de pagos de cada cliente
 

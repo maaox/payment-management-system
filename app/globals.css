@@ -5,7 +5,7 @@
 :root {
   --foreground-rgb: 31, 41, 55;
   --background-rgb: 248, 250, 252;
-  
+
   --background: 210 40% 98%;
   --foreground: 217 33% 17%;
   --card: 0 0% 100%;
@@ -57,8 +57,10 @@
   body {
     @apply bg-background text-foreground;
   }
-  
-  input:focus, textarea:focus, select:focus {
+
+  input:focus,
+  textarea:focus,
+  select:focus {
     @apply outline-2 outline-offset-1 outline-primary;
   }
 }
@@ -67,43 +69,43 @@
   .btn-primary {
     @apply bg-primary text-primary-foreground rounded-2xl shadow hover:shadow-lg hover:-translate-y-0.5 transition duration-200;
   }
-  
+
   .btn-secondary {
     @apply bg-secondary text-secondary-foreground rounded-2xl shadow hover:shadow-lg hover:-translate-y-0.5 transition duration-200;
   }
-  
+
   .btn-accent {
     @apply bg-accent text-accent-foreground rounded-2xl shadow hover:shadow-lg hover:-translate-y-0.5 transition duration-200;
   }
-  
+
   .nav-link {
     @apply flex items-center gap-2 p-4 hover:bg-primary/10 rounded-lg transition-colors;
   }
-  
+
   .nav-link.active {
     @apply bg-primary/10 text-primary;
   }
-  
+
   .table-container {
     @apply rounded-lg overflow-hidden border border-border;
   }
-  
+
   .table-header {
     @apply bg-primary text-primary-foreground sticky top-0;
   }
-  
+
   .table-row-even {
     @apply bg-white;
   }
-  
+
   .table-row-odd {
     @apply bg-[#EDF2F7];
   }
-  
+
   .table-row {
     @apply hover:bg-gray-100 transition-colors;
   }
-  
+
   .form-input {
     @apply rounded-lg focus:outline-2 focus:outline-offset-1 focus:outline-primary;
   }

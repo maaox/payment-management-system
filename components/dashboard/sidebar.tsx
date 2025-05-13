@@ -6,7 +6,6 @@ import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/lib/auth";
 import {
-  Users,
   CreditCard,
   LogOut,
   Menu,
@@ -55,6 +54,14 @@ export function Sidebar() {
     (item) => user && item.roles.includes(user.role)
   );
 
+  const dictionaryRoles = {
+    ADMIN: "Administrador",
+    COLLABORATOR: "Colaborador",
+    CLIENT: "Cliente",
+    USER: "Usuario",
+  };
+
+  
   return (
     <>
       {/* Mobile sidebar toggle */}
@@ -107,7 +114,7 @@ export function Sidebar() {
               <div>
                 <h2 className="font-medium">{user?.name || "Usuario"}</h2>
                 <p className="text-xs text-muted-foreground">
-                  {user?.role || "Rol"}
+                  {dictionaryRoles[user?.role || "USER"]}
                 </p>
               </div>
             </div>

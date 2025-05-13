@@ -1,4 +1,3 @@
-// app/api/payments/[id]/route.ts
 import { deletePayment, updatePayment } from "@/services/payment-service";
 import { NextRequest, NextResponse } from "next/server";
 

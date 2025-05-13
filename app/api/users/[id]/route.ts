@@ -1,6 +1,18 @@
-// app/api/users/[id]/route.ts
-import { deleteUser, updateUser } from "@/services/user-service";
+import { deleteUser, getUser, updateUser } from "@/services/user-service";
 import { NextRequest, NextResponse } from "next/server";
+
+export async function GET(
+  req: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  const { id } = params;
+  try {
+    const user = await getUser(id);
+    return NextResponse.json(user);
+  } catch (err: any) {
+    return NextResponse.json({ error: err.message }, { status: 400 });
+  }
+}
 
 export async function PUT(
   req: NextRequest,

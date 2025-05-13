@@ -1,4 +1,3 @@
-// app/api/payments/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { createPayment, getPayments } from "@/services/payment-service";
 

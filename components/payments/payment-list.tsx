@@ -18,7 +18,11 @@ type PaymentListProps = {
   onUpdatePayment?: (updatedPayment: Payment) => Promise<void>;
   onCreatePayment?: (newPayment: Payment) => Promise<void>;
   onDeletePayment?: (paymentId: string) => Promise<void>;
+  isLoading?: boolean;
+  isProcessing?: boolean;
 };
+
+const CATEGORIES = ["Parcial", "Final"];
 
 export function PaymentList({
   payments,
@@ -26,6 +30,8 @@ export function PaymentList({
   onUpdatePayment,
   onCreatePayment,
   onDeletePayment,
+  isLoading = false,
+  isProcessing = false,
 }: PaymentListProps) {
   const [isPaymentFormOpen, setIsPaymentFormOpen] = useState(false);
   const [sections, setSections] = useState<PaymentSection[]>([]);
@@ -44,13 +50,15 @@ export function PaymentList({
 
     // Extract unique categories
     const uniqueCategories = Object.keys(groupedPayments);
-    setCategories(uniqueCategories);
+    setCategories([...uniqueCategories, ...CATEGORIES]);
 
     // Create sections from grouped payments
     const newSections = Object.entries(groupedPayments).map(
       ([category, categoryPayments]) => ({
         title: category,
-        payments: categoryPayments.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime()),
+        payments: categoryPayments.sort(
+          (a, b) => b.createdAt.getTime() - a.createdAt.getTime()
+        ),
       })
     );
 
@@ -64,7 +72,8 @@ export function PaymentList({
         category: data.category || "Otros",
         concept: data.concept,
         amount: parseFloat(data.amount),
-        imageSrc: data.imageSrc,
+        image: data.image,
+        imageType: data.imageType,
         clientId: payments[0]?.clientId || "",
         createdAt: new Date(),
       };
@@ -80,15 +89,16 @@ export function PaymentList({
         <div className="text-2xl font-bold">{formatCurrency(totalPaid)}</div>
       </div>
 
-        <div className="flex justify-end">
-          <Button
-            onClick={() => setIsPaymentFormOpen(true)}
-            className="rounded-2xl"
-          >
-            <Plus className="h-4 w-4 mr-2" />
-            Crear pago
-          </Button>
-        </div>
+      <div className="flex justify-end">
+        <Button
+          onClick={() => setIsPaymentFormOpen(true)}
+          className="rounded-2xl"
+          disabled={isLoading || isProcessing}
+        >
+          <Plus className="h-4 w-4 mr-2" />
+          Crear pago
+        </Button>
+      </div>
 
       {sections.map((section) => (
         <div key={section.title} className="space-y-4">
@@ -101,6 +111,7 @@ export function PaymentList({
                 existingCategories={categories}
                 onUpdate={onUpdatePayment}
                 onDelete={onDeletePayment}
+                isDisabled={isProcessing}
               />
             ))}
           </div>
@@ -112,6 +123,7 @@ export function PaymentList({
         onClose={() => setIsPaymentFormOpen(false)}
         onSubmit={handleCreatePayment}
         existingCategories={categories}
+        isProcessing={isProcessing}
       />
     </div>
   );

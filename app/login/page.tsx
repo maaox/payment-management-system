@@ -7,45 +7,64 @@ import { Input } from "@/components/ui/input";
 import {
   Card,
   CardContent,
-  CardDescription,
   CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
 import { useAuth } from "@/lib/auth";
 import Image from "next/image";
+import { toast, Toaster } from "react-hot-toast";
+import { Loader2 } from "lucide-react";
 
 export default function LoginPage() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
   const { login } = useAuth();
   const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError("");
-
-    if (!username || !password) {
-      setError("Por favor, completa todos los campos");
+    
+    // Validación de campos vacíos
+    if (!username.trim()) {
+      toast.error("Por favor, ingresa tu nombre de usuario");
+      return;
+    }
+    
+    if (!password) {
+      toast.error("Por favor, ingresa tu contraseña");
       return;
     }
 
+    setIsLoading(true);
+    
     try {
+      // Mostrar toast de carga
+      const loadingToast = toast.loading("Iniciando sesión...");
+      
       const success = await login(username, password);
+      
+      // Eliminar toast de carga
+      toast.dismiss(loadingToast);
+      
       if (success) {
+        toast.success("¡Bienvenido al sistema!");
         router.push("/dashboard");
       } else {
-        setError("Usuario o contraseña incorrectos");
+        toast.error("Usuario o contraseña incorrectos");
       }
     } catch (err) {
-      setError("Error al iniciar sesión");
-      console.error(err);
+      console.error("Error de inicio de sesión:", err);
+      toast.error("Error al conectar con el servidor. Intenta nuevamente.");
+    } finally {
+      setIsLoading(false);
     }
   };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-[#F8FAFC] p-4">
+      <Toaster position="top-right" />
       <div className="w-full max-w-md animate-scale-in">
         <Card className="shadow-xl rounded-2xl">
           <CardHeader className="items-center space-y-2 text-center">
@@ -75,6 +94,8 @@ export default function LoginPage() {
                   onChange={(e) => setUsername(e.target.value)}
                   className="form-input"
                   aria-label="Nombre de usuario"
+                  disabled={isLoading}
+                  autoComplete="username"
                 />
               </div>
               <div className="space-y-2">
@@ -89,41 +110,32 @@ export default function LoginPage() {
                   onChange={(e) => setPassword(e.target.value)}
                   className="form-input"
                   aria-label="Contraseña"
+                  disabled={isLoading}
+                  autoComplete="current-password"
                 />
               </div>
-              {error && (
-                <div className="text-destructive text-sm font-medium">
-                  {error}
-                </div>
-              )}
             </CardContent>
             <CardFooter>
               <Button
                 type="submit"
                 className="w-full rounded-2xl shadow-md hover:shadow-lg transition-all duration-200 hover:-translate-y-0.5"
                 aria-label="Ingresar"
+                disabled={isLoading}
               >
-                Ingresar
+                {isLoading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Iniciando sesión...
+                  </>
+                ) : (
+                  "Ingresar"
+                )}
               </Button>
             </CardFooter>
           </form>
         </Card>
         <div className="mt-4 text-center text-sm text-muted-foreground">
-          <p>Demo: Usa cualquiera de los siguientes usuarios:</p>
-          <ol className="list-disc list-inside">
-            <li>
-              <strong>Administrador</strong>: admin
-            </li>
-            <li>
-              <strong>Colaborador</strong>: colaborador1
-            </li>
-            <li>
-              <strong>Cliente</strong>: cliente1
-            </li>
-          </ol>
-          <p>
-            <strong>Contraseña</strong>: Digita cualquier contraseña
-          </p>
+          <p>Ingresa con tus credenciales de usuario</p>
         </div>
       </div>
     </div>

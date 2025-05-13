@@ -1,10 +1,10 @@
 "use client";
 
-import { useAuth } from '@/lib/auth';
-import { useRouter } from 'next/navigation';
-import { useEffect } from 'react';
-import { Sidebar } from '@/components/dashboard/sidebar';
-import { Skeleton } from '@/components/ui/skeleton';
+import { useAuth } from "@/lib/auth";
+import { useRouter } from "next/navigation";
+import { useEffect } from "react";
+import { Sidebar } from "@/components/dashboard/sidebar";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function DashboardLayout({
   children,
@@ -16,7 +16,7 @@ export default function DashboardLayout({
 
   useEffect(() => {
     if (!isLoading && !user) {
-      router.push('/login');
+      router.push("/login");
     }
   }, [user, isLoading, router]);
 
@@ -32,9 +32,7 @@ export default function DashboardLayout({
     <div className="min-h-screen bg-[#F8FAFC]">
       <Sidebar />
       <main className="lg:pl-64 min-h-screen pt-16 lg:pt-0">
-        <div className="container mx-auto px-4 py-6">
-          {children}
-        </div>
+        <div className="container mx-auto px-4 py-6">{children}</div>
       </main>
     </div>
   );

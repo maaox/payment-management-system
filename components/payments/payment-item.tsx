@@ -2,17 +2,19 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Payment, formatCurrency } from "@/lib/utils";
+import { Payment, USER_ROLES, formatCurrency } from "@/lib/utils";
 import { ImagePreviewModal } from "@/components/modals/image-preview-modal";
 import { Eye, Pencil, Trash2 } from "lucide-react";
 import { PaymentForm } from "./payment-form";
 import { ConfirmationDialog } from "../modals/confirmation-dialog";
+import { useAuth } from "@/lib/auth";
 
 type PaymentItemProps = {
   payment: Payment;
   existingCategories?: string[];
   onUpdate?: (updatedPayment: Payment) => Promise<void>;
   onDelete?: (paymentId: string) => Promise<void>;
+  isDisabled?: boolean;
 };
 
 export function PaymentItem({
@@ -20,7 +22,10 @@ export function PaymentItem({
   onUpdate,
   onDelete,
   existingCategories = [],
+  isDisabled = false,
 }: PaymentItemProps & { existingCategories?: string[] }) {
+  const { user } = useAuth();
+
   const [isImagePreviewOpen, setIsImagePreviewOpen] = useState(false);
   const [isEditFormOpen, setIsEditFormOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -36,7 +41,8 @@ export function PaymentItem({
         category: data.category,
         concept: data.concept,
         amount: parseFloat(data.amount) || 0,
-        imageSrc: data.imageSrc,
+        image: data.image,
+        imageType: data.imageType,
       };
 
       await onUpdate(updatedPayment);
@@ -69,20 +75,22 @@ export function PaymentItem({
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <div className="font-medium">{payment.concept}</div>
-          <div className="text-sm text-muted-foreground">
-            {new Date(payment.createdAt).toLocaleDateString()}
-          </div>
+          {user?.role !== USER_ROLES.CLIENT && (
+            <div className="text-sm text-muted-foreground">
+              {new Date(payment.createdAt).toLocaleDateString()}
+            </div>
+          )}
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <div className="font-medium">{formatCurrency(payment.amount)}</div>
 
           <div className="flex items-center gap-2">
-            {payment.imageSrc && (
+            {payment.image && (
               <Button
                 variant="outline"
                 size="icon"
                 className="rounded-full"
-                disabled={isSaving}
+                disabled={isSaving || isDisabled}
                 onClick={() => setIsImagePreviewOpen(true)}
                 aria-label="Ver comprobante"
               >
@@ -90,38 +98,37 @@ export function PaymentItem({
               </Button>
             )}
 
-              
-                <Button
-                  variant="outline"
-                  size="icon"
-                  className="rounded-full"
-                  disabled={isSaving}
-                  onClick={() => setIsEditFormOpen(true)}
-                  aria-label="Editar pago"
-                >
-                  <Pencil className="h-4 w-4" />
-                </Button>
+            <Button
+              variant="outline"
+              size="icon"
+              className="rounded-full"
+              disabled={isSaving || isDisabled}
+              onClick={() => setIsEditFormOpen(true)}
+              aria-label="Editar pago"
+            >
+              <Pencil className="h-4 w-4" />
+            </Button>
 
-                <Button
-                  variant="outline"
-                  size="icon"
-                  className="rounded-full text-destructive"
-                  disabled={isSaving}
-                  onClick={openDeleteDialog}
-                  aria-label="Eliminar pago"
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-              
+            <Button
+              variant="outline"
+              size="icon"
+              className="rounded-full text-destructive"
+              disabled={isSaving || isDisabled}
+              onClick={openDeleteDialog}
+              aria-label="Eliminar pago"
+            >
+              <Trash2 className="h-4 w-4" />
+            </Button>
           </div>
         </div>
       </div>
 
-      {payment.imageSrc && (
+      {payment.image && payment.imageType && (
         <ImagePreviewModal
           isOpen={isImagePreviewOpen}
           onClose={() => setIsImagePreviewOpen(false)}
-          imageSrc={payment.imageSrc}
+          image={payment.image}
+          imageType={payment.imageType}
           title={`Comprobante: ${payment.concept}`}
         />
       )}
@@ -134,10 +141,12 @@ export function PaymentItem({
           category: payment.category,
           concept: payment.concept,
           amount: payment.amount,
-          imageSrc: payment.imageSrc,
+          image: payment.image,
+          imageType: payment.imageType,
         }}
         isEditing={true}
         existingCategories={existingCategories}
+        isProcessing={isDisabled}
       />
 
       <ConfirmationDialog

@@ -30,7 +30,6 @@ import {
   CommandGroup,
   CommandInput,
   CommandItem,
-  CommandList,
 } from "@/components/ui/command";
 import {
   Popover,
@@ -39,6 +38,7 @@ import {
 } from "@/components/ui/popover";
 import { Check, ChevronsUpDown } from "lucide-react";
 import { cn } from "@/lib/utils";
+import imageCompression from "browser-image-compression"; // Necesitarás instalar esta dependencia
 
 const formSchema = z.object({
   category: z.string().min(1, "La categoría es requerida"),
@@ -51,15 +51,19 @@ type FormValues = z.infer<typeof formSchema>;
 type PaymentFormProps = {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (data: FormValues & { imageSrc: string | null }) => Promise<void>;
+  onSubmit: (
+    data: FormValues & { image: string | null; imageType: string | null }
+  ) => Promise<void>;
   initialData?: {
     category?: string;
     concept?: string;
     amount?: number;
-    imageSrc?: string | null;
+    image?: string | null;
+    imageType?: string | null;
   };
   isEditing?: boolean;
   existingCategories?: string[];
+  isProcessing?: boolean;
 };
 
 export function PaymentForm({
@@ -69,21 +73,26 @@ export function PaymentForm({
   initialData,
   isEditing = false,
   existingCategories = [],
+  isProcessing = false,
 }: PaymentFormProps) {
   const [isLoading, setIsLoading] = useState(false);
-  const [tempImageUrl, setTempImageUrl] = useState<string | null>(
-    initialData?.imageSrc || null
-  );
+  const [tempImageUrl, setTempImageUrl] = useState<string | null>(null);
+  const [imageBase64, setImageBase64] = useState<string | null>(null);
+  const [imageType, setImageType] = useState<string | null>(null);
+  const [imageError, setImageError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [open, setOpen] = useState(false);
   const [categories, setCategories] = useState<string[]>([]);
 
-  // Actualizar tempImageUrl cuando cambia initialData.imageSrc
+  // Actualizar tempImageUrl cuando cambia initialData.image o initialData.imageType
   useEffect(() => {
-    if (initialData?.imageSrc) {
-      setTempImageUrl(initialData.imageSrc);
+    if (initialData && initialData.image) {
+      const mimeType = initialData.imageType || "image/jpeg";
+      const imageUrl = `data:${mimeType};base64,${initialData.image}`;
+      setTempImageUrl(imageUrl);
+      setImageType(mimeType);
     }
-  }, [initialData?.imageSrc]);
+  }, [initialData?.image, initialData?.imageType]);
 
   // Obtener categorías únicas de los pagos existentes
   useEffect(() => {
@@ -107,24 +116,98 @@ export function PaymentForm({
     },
   });
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  // Función para comprimir y convertir la imagen a Base64
+  const compressAndConvertToBase64 = async (file: File): Promise<string> => {
+    // Validar tipo de archivo
+    const validTypes = ["image/jpeg", "image/png", "image/jpg", "image/webp"];
+    if (!validTypes.includes(file.type)) {
+      throw new Error(
+        "Tipo de archivo no válido. Solo se permiten imágenes JPG, PNG y WebP."
+      );
+    }
+
+    // Validar tamaño (máximo 5MB antes de comprimir)
+    const maxSizeMB = 5;
+    if (file.size > maxSizeMB * 1024 * 1024) {
+      throw new Error(`El tamaño de la imagen no debe exceder ${maxSizeMB}MB.`);
+    }
+
+    // Opciones de compresión
+    const options = {
+      maxSizeMB: 1, // Tamaño máximo después de comprimir
+      maxWidthOrHeight: 1200, // Dimensión máxima
+      useWebWorker: true,
+      fileType: file.type,
+    };
+
+    try {
+      // Comprimir la imagen
+      const compressedFile = await imageCompression(file, options);
+
+      // Convertir a Base64
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          const base64String = reader.result as string;
+          // Extraer solo la parte Base64, eliminando "data:image/jpeg;base64,"
+          const base64Data = base64String.split(",")[1];
+          resolve(base64Data);
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(compressedFile);
+      });
+    } catch (error) {
+      console.error("Error al comprimir la imagen:", error);
+      throw new Error(
+        "Error al procesar la imagen. Por favor, intenta con otra imagen."
+      );
+    }
+  };
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Create a URL for preview
-    const imageUrl = URL.createObjectURL(file);
-    setTempImageUrl(imageUrl);
+    setImageError(null);
+
+    try {
+      // Crear URL para vista previa
+      const imageUrl = URL.createObjectURL(file);
+      setTempImageUrl(imageUrl);
+      setImageType(file.type); // Guardar el tipo MIME
+
+      // Comprimir y convertir a Base64
+      const base64Data = await compressAndConvertToBase64(file);
+      setImageBase64(base64Data);
+    } catch (error) {
+      setImageError((error as Error).message);
+      setTempImageUrl(null);
+      setImageBase64(null);
+      setImageType(null);
+
+      // Limpiar el input de archivo
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
+    }
   };
 
   const handleSubmit = async (data: FormValues) => {
+    if (imageError) {
+      return; // No permitir envío si hay error de imagen
+    }
+
     setIsLoading(true);
     try {
       await onSubmit({
         ...data,
-        imageSrc: tempImageUrl,
+        image: imageBase64,
+        imageType: imageType, // Enviar el tipo MIME
       });
       form.reset();
       setTempImageUrl(null);
+      setImageBase64(null);
+      setImageType(null);
       onClose();
     } catch (error) {
       console.error(error);
@@ -339,17 +422,17 @@ export function PaymentForm({
                 type="button"
                 variant="outline"
                 onClick={onClose}
-                disabled={isLoading}
+                disabled={isLoading || isProcessing}
                 className="rounded-2xl"
               >
                 Cancelar
               </Button>
               <Button
                 type="submit"
-                disabled={isLoading}
+                disabled={isLoading || isProcessing}
                 className="rounded-2xl"
               >
-                {isLoading
+                {isProcessing
                   ? "Guardando..."
                   : isEditing
                   ? "Guardar cambios"
